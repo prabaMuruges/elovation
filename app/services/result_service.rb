@@ -2,18 +2,30 @@ class ResultService
   def self.create(game, params)
     result = game.results.build
 
-    next_rank = Team::FIRST_PLACE_RANK
-    teams = (params[:teams] || {}).values.each.with_object([]) do |team, acc|
-      players = Array.wrap(team[:players]).delete_if(&:blank?)
-      acc << { rank: next_rank, players: players }
+    rank = Team::FIRST_PLACE_RANK
+    prev_score = 0
 
-      next_rank = next_rank + 1 if team[:relation] != "ties"
+    sorted_teams = params[:teams].values&.sort_by{ |t| t['score'].to_i }&.reverse
+    teams = (sorted_teams || []).each.with_object([]) do |team, acc|
+      players = Array.wrap(team[:players]).delete_if(&:blank?)
+      score = team[:score].to_i
+      rank = score > prev_score ? rank : rank + 1
+
+      acc << { rank: rank, players: players, score: score }
+
+      prev_score = score
+      # next_rank = next_rank + 1 if team[:relation] != "ties"
     end
 
     teams = teams.reverse.drop_while{ |team| team[:players].empty? }.reverse
 
     teams.each do |team|
-      result.teams.build rank: team[:rank], player_ids: team[:players]
+      result_team = result.teams.build(rank: team[:rank])
+      Array(team[:players]).each do |player_id|
+        result_team.players_teams.build(player_id: player_id, score: team[:score])
+        # PlayersTeam.build(team_id: result_team.id, player_id: player_id, )
+        # result_team.players.build(players_teams: { score: team[:score]})
+      end
     end
 
     if result.valid?

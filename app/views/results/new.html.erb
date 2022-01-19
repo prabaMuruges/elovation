@@ -4,14 +4,8 @@
   <% @result.teams.each.with_index do |team, index| %>
     <%= select "result[teams][#{index}]", "players", player_options, {include_blank: ''}, class: "players", multiple: @game.max_number_of_players_per_team != 1, "data-placeholder" => "Team #{index + 1}" %>
 
-    <% if index != @result.teams.size - 1 %>
-      <% if @game.allow_ties %>
-        <%= select "result[teams][#{index}]", :relation, ["defeats", "ties"], {} %>
-      <% else %>
-        <%= hidden_field_tag "result[teams][#{index}][relation]", :defeats, {} %>
-        Defeats:
-      <% end %>
-    <% end %>
+    <%= select "result[teams][#{index}]", "score", score_options, {include_blank: ''}, class: "scores", "data-placeholder" => "Score" %>
+    <br>
   <% end %>
 
   <div class='form-actions'>

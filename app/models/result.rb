@@ -23,11 +23,11 @@ class Result < ActiveRecord::Base
       result.errors.add(:teams, "must have at most #{result.game.max_number_of_teams} teams")
     end
 
-    if result.teams.any?{|team| team.players.size < result.game.min_number_of_players_per_team}
+    if result.teams.any?{|team| team.players_teams.size < result.game.min_number_of_players_per_team}
       result.errors.add(:teams, "must have at least #{result.game.min_number_of_players_per_team} players per team")
     end
 
-    if result.game.max_number_of_players_per_team && result.teams.any?{|team| team.players.size > result.game.max_number_of_players_per_team}
+    if result.game.max_number_of_players_per_team && result.teams.any?{|team| team.players_teams.size > result.game.max_number_of_players_per_team}
       result.errors.add(:teams, "must have at most #{result.game.max_number_of_players_per_team} players per team")
     end
 
@@ -41,11 +41,17 @@ class Result < ActiveRecord::Base
   end
 
   def winners
-    teams.select{ |team| team.rank == Team::FIRST_PLACE_RANK }.map(&:players).flatten
+    winning_teams = teams.select{ |team| team.rank == Team::FIRST_PLACE_RANK }
+    winning_player_ids = winning_teams.map { |t| t.players_teams.map(&:player_id) }.flatten
+    Player.where(id: winning_player_ids)
+    # teams.select{ |team| team.rank == Team::FIRST_PLACE_RANK }.map(&:players).flatten
   end
 
   def losers
-    teams.select{ |team| team.rank != Team::FIRST_PLACE_RANK }.map(&:players).flatten
+    loosing_teams = teams.select{ |team| team.rank != Team::FIRST_PLACE_RANK }
+    loosing_player_ids = loosing_teams.map { |t| t.players_teams.map(&:player_id) }.flatten
+    Player.where(id: loosing_player_ids)
+    # teams.select{ |team| team.rank != Team::FIRST_PLACE_RANK }.map(&:players).flatten
   end
 
   def tie?

@@ -5,7 +5,8 @@ class Player < ActiveRecord::Base
     end
   end
 
-  has_and_belongs_to_many :teams
+  has_many :players_teams
+  has_many :teams, through: :players_teams
 
   has_many :results, through: :teams do
     def against(opponent)

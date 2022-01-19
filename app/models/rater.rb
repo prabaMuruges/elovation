@@ -33,8 +33,15 @@ module Rater
 
         first_elo.plays_draw(second_elo)
       else
-        winner = winning_teams.first.players.first
-        loser = teams.detect{|team| team.rank != Team::FIRST_PLACE_RANK}.players.first
+        winning_player_ids = winning_teams.first.players_teams.map(&:player_id)
+        winner = Player.where(id: winning_player_ids).first
+
+        # winner = winning_teams.first.players.first
+
+        loosing_player_ids = teams.detect{|team| team.rank != Team::FIRST_PLACE_RANK}.players_teams.map(&:player_id)
+        loser = Player.where(id: loosing_player_ids).first
+
+        # loser = teams.detect{|team| team.rank != Team::FIRST_PLACE_RANK}.players.first
 
         first_rating = winner.ratings.find_or_create(game)
         second_rating = loser.ratings.find_or_create(game)
